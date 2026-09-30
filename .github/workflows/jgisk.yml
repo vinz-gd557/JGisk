@@ -12,6 +12,8 @@ jobs:
             url=$(git config -f .gitmodules --get submodule.$name.url)
             rm -rf "$path"; git clone --depth 1 "$url" "$path"
           done
+      - name: Perbaiki izin eksekusi (hilang saat di-zip)
+        run: chmod -R +x build.py app/gradlew tools scripts
       - uses: ./.github/actions/setup
       - name: Config (arm64 saja + signing)
         run: |
@@ -26,7 +28,7 @@ jobs:
             echo "keyPass=jgiskpass"
           } > config.prop
       - name: Build release
-        run: ./build.py -vr all
+        run: python3 build.py -vr all
       - uses: actions/upload-artifact@v4
         with:
           name: JGisk-apk
