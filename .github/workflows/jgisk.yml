@@ -12,6 +12,12 @@ jobs:
             url=$(git config -f .gitmodules --get submodule.$name.url)
             rm -rf "$path"; git clone --depth 1 "$url" "$path"
           done
+      - name: Perbaiki symlink cxx.h (hilang saat upload dari zip)
+        run: |
+          ls -la native/src/external/cxx-rs/include/cxx.h
+          mkdir -p native/src/base/include/rust
+          rm -f native/src/base/include/rust/cxx.h
+          cp native/src/external/cxx-rs/include/cxx.h native/src/base/include/rust/cxx.h
       - name: Perbaiki izin eksekusi (hilang saat di-zip)
         run: chmod -R +x build.py app/gradlew tools scripts
       - uses: ./.github/actions/setup
