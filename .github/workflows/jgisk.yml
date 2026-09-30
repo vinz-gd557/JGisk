@@ -1,0 +1,33 @@
+name: Build JGisk
+on: workflow_dispatch
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Isi submodule (zip GitHub tidak membawanya)
+        run: |
+          git config -f .gitmodules --get-regexp '\.path$' | while read k path; do
+            name=${k#submodule.}; name=${name%.path}
+            url=$(git config -f .gitmodules --get submodule.$name.url)
+            rm -rf "$path"; git clone --depth 1 "$url" "$path"
+          done
+      - uses: ./.github/actions/setup
+      - name: Config (arm64 saja + signing)
+        run: |
+          keytool -genkeypair -keystore jgisk.jks -alias jgisk -keyalg RSA -keysize 2048 -validity 36500 \
+            -storepass jgiskpass -keypass jgiskpass -dname "CN=JGisk" -storetype PKCS12
+          {
+            echo "abiList=arm64-v8a"
+            echo "version=JGisk-1.0"
+            echo "keyStore=$PWD/jgisk.jks"
+            echo "keyStorePass=jgiskpass"
+            echo "keyAlias=jgisk"
+            echo "keyPass=jgiskpass"
+          } > config.prop
+      - name: Build release
+        run: ./build.py -vr all
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JGisk-apk
+          path: out/*.apk
