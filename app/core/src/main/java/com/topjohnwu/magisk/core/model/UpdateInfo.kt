@@ -58,11 +58,5 @@ data class Release(
     val body: String,
     @param:Json(name = "created_at") val createdTime: Instant,
 ) {
-    val versionCode: Int get() {
-        return if (tag[0] == 'v') {
-            (tag.drop(1).toFloat() * 1000).toInt()
-        } else {
-            tag.drop(7).toInt()
-        }
-    }
+    val versionCode: Int get() = com.topjohnwu.magisk.core.utils.JgUpdate.code(tag)
 }

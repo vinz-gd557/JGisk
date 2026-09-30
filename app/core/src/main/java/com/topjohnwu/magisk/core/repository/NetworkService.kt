@@ -1,5 +1,6 @@
 package com.topjohnwu.magisk.core.repository
 
+import com.topjohnwu.magisk.core.utils.JgUpdate
 import com.topjohnwu.magisk.core.BuildConfig
 import com.topjohnwu.magisk.core.Config
 import com.topjohnwu.magisk.core.Config.Value.BETA_CHANNEL
@@ -23,22 +24,20 @@ class NetworkService(
     private val api: GithubApiServices,
 ) {
     suspend fun fetchUpdate() = safe {
-        var info = when (Config.updateChannel) {
-            DEFAULT_CHANNEL -> if (BuildConfig.DEBUG) fetchDebugUpdate() else fetchStableUpdate()
-            STABLE_CHANNEL -> fetchStableUpdate()
-            BETA_CHANNEL -> fetchBetaUpdate()
-            DEBUG_CHANNEL -> fetchDebugUpdate()
-            CUSTOM_CHANNEL -> fetchCustomUpdate(Config.customChannelUrl)
-            else -> throw IllegalArgumentException()
+        val release = api.fetchLatestRelease()
+        val apk = release.assets.firstOrNull {
+            it.name.endsWith(".apk") && !it.name.contains("debug") && !it.name.contains("stub")
         }
-        if (info.versionCode < Info.env.versionCode &&
-            Config.updateChannel == DEFAULT_CHANNEL &&
-            !BuildConfig.DEBUG
-        ) {
-            Config.updateChannel = BETA_CHANNEL
-            info = fetchBetaUpdate()
+        if (apk == null) {
+            UpdateInfo()
+        } else {
+            UpdateInfo(
+                version = release.tag.trimStart('v', 'V'),
+                versionCode = JgUpdate.code(release.tag),
+                link = apk.url,
+                note = "## ${release.name}\n\n${release.body}"
+            )
         }
-        info
     }
 
     suspend fun fetchUpdate(version: Int) = safe {

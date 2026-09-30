@@ -1,5 +1,6 @@
 package com.topjohnwu.magisk.ui.home
 
+import com.topjohnwu.magisk.core.utils.JgUpdate
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.widget.Toast
@@ -94,7 +95,7 @@ class HomeViewModel(
             val isDebug = Config.updateChannel == Config.Value.DEBUG_CHANNEL
             _uiState.update {
                 it.copy(
-                    appState = if (BuildConfig.APP_VERSION_CODE < versionCode) State.OUTDATED else State.UP_TO_DATE,
+                    appState = if (JgUpdate.isNewer(version)) State.OUTDATED else State.UP_TO_DATE,
                     managerRemoteVersion = "$version ($versionCode)" + if (isDebug) " (D)" else ""
                 )
             }

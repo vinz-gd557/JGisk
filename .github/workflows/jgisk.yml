@@ -1,8 +1,17 @@
 name: Build JGisk
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag rilis (contoh v1.0, v1.1)"
+        default: "v1.0"
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.tag }}
     steps:
       - uses: actions/checkout@v6
       - name: Isi submodule (zip GitHub tidak membawanya)
@@ -12,22 +21,26 @@ jobs:
             url=$(git config -f .gitmodules --get submodule.$name.url)
             rm -rf "$path"; git clone --depth 1 "$url" "$path"
           done
-      - name: Perbaiki symlink cxx.h (hilang saat upload dari zip)
+      - name: Perbaiki symlink cxx.h
         run: |
-          ls -la native/src/external/cxx-rs/include/cxx.h
           mkdir -p native/src/base/include/rust
           rm -f native/src/base/include/rust/cxx.h
           cp native/src/external/cxx-rs/include/cxx.h native/src/base/include/rust/cxx.h
-      - name: Perbaiki izin eksekusi (hilang saat di-zip)
+      - name: Perbaiki izin eksekusi
         run: chmod -R +x build.py app/gradlew tools scripts
       - uses: ./.github/actions/setup
-      - name: Config (arm64 saja + signing)
+      - name: Keystore (pakai jgisk.jks di repo kalau ada)
         run: |
-          keytool -genkeypair -keystore jgisk.jks -alias jgisk -keyalg RSA -keysize 2048 -validity 36500 \
-            -storepass jgiskpass -keypass jgiskpass -dname "CN=JGisk" -storetype PKCS12
+          if [ ! -f jgisk.jks ]; then
+            keytool -genkeypair -keystore jgisk.jks -alias jgisk -keyalg RSA -keysize 2048 -validity 36500 \
+              -storepass jgiskpass -keypass jgiskpass -dname "CN=JGisk" -storetype PKCS12
+            echo "KEYSTORE_BARU=1" >> "$GITHUB_ENV"
+          fi
+      - name: Config
+        run: |
           {
             echo "abiList=arm64-v8a"
-            echo "version=JGisk-1.0"
+            echo "version=JGisk-${TAG#v}"
             echo "keyStore=$PWD/jgisk.jks"
             echo "keyStorePass=jgiskpass"
             echo "keyAlias=jgisk"
@@ -35,7 +48,24 @@ jobs:
           } > config.prop
       - name: Build release
         run: python3 build.py -vr all
+      - name: Siapkan JGisk.apk
+        run: |
+          ls out/
+          APK=$(ls out/*.apk | grep -v -e stub -e test | head -1)
+          cp "$APK" JGisk.apk
       - uses: actions/upload-artifact@v4
         with:
           name: JGisk-apk
-          path: out/*.apk
+          path: JGisk.apk
+      - uses: actions/upload-artifact@v4
+        if: env.KEYSTORE_BARU == '1'
+        with:
+          name: SIMPAN-jgisk-keystore
+          path: jgisk.jks
+      - name: Publish ke GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          name: JGisk ${{ inputs.tag }}
+          files: JGisk.apk
+          make_latest: true

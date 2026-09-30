@@ -1,5 +1,12 @@
 package com.topjohnwu.magisk.ui
 
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material.icons.filled.Lock
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibility
@@ -95,11 +102,12 @@ fun MainScreen(
         Tab.entries.filter { tab ->
             when (tab) {
                 Tab.SUPERUSER -> Info.showSuperUser
-                Tab.MODULES -> Info.env.isActive && LocalModule.loaded()
+                Tab.MODULES -> true
                 else -> true
             }
         }
     }
+    val modulesUnlocked = remember { Info.env.isActive && LocalModule.loaded() }
     val initialPage = visibleTabs.indexOf(Tab.entries[initialTab]).coerceAtLeast(0)
     val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { visibleTabs.size })
     val fabFocusRequester = remember { FocusRequester() }
@@ -145,7 +153,8 @@ fun MainScreen(
                                             up = fabFocusRequester
                                         }
                                     },
-                                icon = ImageVector.vectorResource(tab.iconRes),
+                                icon = if (tab == Tab.MODULES && !modulesUnlocked) Icons.Default.Lock
+                                else ImageVector.vectorResource(tab.iconRes),
                                 label = stringResource(tab.titleRes),
                             )
                         }
@@ -250,7 +259,13 @@ fun MainScreen(
                         }
                         LogScreen(vm)
                     }
-                    Tab.MODULES -> {
+                    Tab.MODULES -> if (!modulesUnlocked) {
+                        JgLockedPage(onGoHome = {
+                            scope.launch {
+                                pagerState.animateScrollToPage(visibleTabs.indexOf(Tab.HOME).coerceAtLeast(0))
+                            }
+                        })
+                    } else {
                         val vm: ModuleViewModel = viewModel(factory = VMFactory)
                         LaunchedEffect(isCurrentPage) {
                             if (isCurrentPage) vm.startLoading()
@@ -305,5 +320,36 @@ private fun JgDockItem(
                 modifier = Modifier.padding(start = 8.dp)
             )
         }
+    }
+}
+
+@Composable
+private fun JgLockedPage(onGoHome: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(32.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = Icons.Default.Lock,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(64.dp)
+        )
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text = "Module terkunci",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "Fitur ini aktif setelah HP kamu di-root dengan JGisk. Buka Beranda, pilih Pasang, patch boot image, lalu flash dan reboot.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(20.dp))
+        Button(onClick = onGoHome) { Text("Ke Beranda") }
     }
 }
