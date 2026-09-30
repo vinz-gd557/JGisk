@@ -24,18 +24,30 @@ class NetworkService(
     private val api: GithubApiServices,
 ) {
     suspend fun fetchUpdate() = safe {
-        val release = api.fetchLatestRelease()
-        val apk = release.assets.firstOrNull {
-            it.name.endsWith(".apk") && !it.name.contains("debug") && !it.name.contains("stub")
+        val url = "https://api.github.com/repos/vinz-gd557/JGisk/releases/latest"
+        val json = org.json.JSONObject(raw.fetchString(url))
+        fun org.json.JSONObject.str(k: String) = if (isNull(k)) "" else getString(k)
+        val tag = json.str("tag_name")
+        var link = ""
+        val assets = json.optJSONArray("assets")
+        if (assets != null) {
+            for (i in 0 until assets.length()) {
+                val asset = assets.getJSONObject(i)
+                val n = asset.str("name")
+                if (n.endsWith(".apk") && !n.contains("debug") && !n.contains("stub")) {
+                    link = asset.str("browser_download_url")
+                    break
+                }
+            }
         }
-        if (apk == null) {
+        if (tag.isEmpty() || link.isEmpty()) {
             UpdateInfo()
         } else {
             UpdateInfo(
-                version = release.tag.trimStart('v', 'V'),
-                versionCode = JgUpdate.code(release.tag),
-                link = apk.url,
-                note = "## ${release.name}\n\n${release.body}"
+                version = tag.trimStart('v', 'V'),
+                versionCode = JgUpdate.code(tag),
+                link = link,
+                note = "## " + json.str("name") + "\n\n" + json.str("body")
             )
         }
     }
