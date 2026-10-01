@@ -344,7 +344,7 @@ private fun JgLockedPage(onGoHome: () -> Unit) {
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            text = "Fitur ini aktif setelah HP kamu di-root dengan JGisk. Buka Beranda, pilih Pasang, patch boot image, lalu flash dan reboot.",
+            text = "Module aktif setelah JGisk terpasang di boot image.\n\n1. Beranda > Pasang > patch boot stok.\n2. Flash dari PC: adb reboot bootloader, lalu fastboot flash init_boot hasil-patch.img (atau boot).\n3. Reboot dan buka JGisk lagi.\n\nShizuku/ADB biasa saja tidak cukup, karena keduanya hanya punya akses shell, bukan root.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center

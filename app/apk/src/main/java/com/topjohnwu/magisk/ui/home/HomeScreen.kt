@@ -251,6 +251,8 @@ fun HomeScreen(
     }
 
     val scrollState = rememberScrollState()
+    var showRepo by remember { mutableStateOf(false) }
+    var showAbout by remember { mutableStateOf(false) }
     val isHidden = context.packageName != BuildConfig.APP_PACKAGE_NAME
 
     Column(
@@ -299,8 +301,18 @@ fun HomeScreen(
             ) { Text(if (isHidden) "Pulihkan app" else "Sembunyikan app") }
         }
 
+        JgRootTest()
+        JgDeviceCard()
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            FilledTonalButton(onClick = { showRepo = true }, modifier = Modifier.weight(1f)) { Text("Repo module") }
+            FilledTonalButton(onClick = { showAbout = true }, modifier = Modifier.weight(1f)) { Text("Tentang & tema") }
+        }
+
         JgCredit(onClick = { viewModel.onLinkPressed("https://github.com/topjohnwu/Magisk") })
     }
+
+    if (showRepo) JgModuleRepoDialog(onDismiss = { showRepo = false })
+    if (showAbout) JgAboutDialog(onDismiss = { showAbout = false })
 
     InstallDialog(
         show = showInstallDialog,

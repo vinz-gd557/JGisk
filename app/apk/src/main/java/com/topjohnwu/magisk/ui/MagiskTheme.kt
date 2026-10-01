@@ -1,5 +1,6 @@
 package com.topjohnwu.magisk.ui
 
+import androidx.compose.runtime.mutableStateOf
 import android.annotation.SuppressLint
 import android.os.Build
 import androidx.activity.compose.LocalActivity
@@ -181,6 +182,26 @@ val MagiskTypography = Typography(
     ),
 )
 
+object JgTheme {
+    private val prefs get() = com.topjohnwu.magisk.core.AppContext.getSharedPreferences("jgisk_theme", 0)
+
+    var accent by mutableStateOf(Color(prefs.getInt("accent", 0xFFB388FF.toInt())))
+        private set
+    var useMonet by mutableStateOf(prefs.getBoolean("monet", false))
+        private set
+
+    fun setAccent(c: Color) {
+        accent = c
+        useMonet = false
+        prefs.edit().putInt("accent", c.toArgb()).putBoolean("monet", false).apply()
+    }
+
+    fun setMonet(on: Boolean) {
+        useMonet = on
+        prefs.edit().putBoolean("monet", on).apply()
+    }
+}
+
 @Composable
 fun MagiskTheme(
     content: @Composable () -> Unit
@@ -190,13 +211,13 @@ fun MagiskTheme(
     val context = LocalContext.current
 
     val isDarkTheme = mode.isDark(isDark)
-    val useDynamicColor = mode.isMonet && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    val useDynamicColor = mode.isMonet && JgTheme.useMonet && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
     val colorScheme = when {
         useDynamicColor && isDarkTheme -> dynamicDarkColorScheme(context)
         useDynamicColor && !isDarkTheme -> dynamicLightColorScheme(context)
-        isDarkTheme -> dynamicColorScheme(MagiskAccentColor, isDark = true)
-        else -> dynamicColorScheme(MagiskAccentColor, isDark = false)
+        isDarkTheme -> dynamicColorScheme(JgTheme.accent, isDark = true)
+        else -> dynamicColorScheme(JgTheme.accent, isDark = false)
     }
 
     val activity = LocalActivity.current

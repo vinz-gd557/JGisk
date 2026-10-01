@@ -477,7 +477,22 @@ abstract class MagiskInstallImpl protected constructor(
         return true
     }
 
+    private fun backupStock() {
+        try {
+            val stamp = java.text.SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(java.util.Date())
+            val out = MediaStoreUtils.getFile("JGisk-stock-boot-$stamp.img")
+            srcBoot.newInputStream().use { input ->
+                out.uri.outputStream().use { os -> input.copyAll(os, 1024 * 1024) }
+            }
+            console.add("- Backup boot stok disimpan: $out")
+        } catch (e: Exception) {
+            console.add("! Backup boot stok gagal (patch tetap dilanjutkan)")
+            Timber.e(e)
+        }
+    }
+
     private fun patchBoot(): Boolean {
+        backupStock()
         val newBoot = installDir.getChildFile("new-boot.img")
         if (!useRootDir) {
             // Create output files before hand
