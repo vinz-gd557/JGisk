@@ -151,6 +151,7 @@ class DownloadEngine(session: DownloadSession) : DownloadSession by session, Dow
             try {
                 val stream = network.fetchFile(subject.url).toProgressStream(subject)
                 processor.handle(stream, subject)
+                JgDownloadState.state.value = JgDlState()
                 val activity = AppContext.foregroundActivity
                 if (activity != null && subject.autoLaunch) {
                     notifyRemove(subject.notifyId)
@@ -160,6 +161,7 @@ class DownloadEngine(session: DownloadSession) : DownloadSession by session, Dow
                 }
             } catch (e: Exception) {
                 Timber.e(e)
+                JgDownloadState.state.value = JgDlState(failed = true, title = subject.title)
                 notifyFail(subject)
             }
         }
@@ -250,6 +252,10 @@ class DownloadEngine(session: DownloadSession) : DownloadSession by session, Dow
 
         return ProgressInputStream(byteStream()) {
             val progress = it.toFloat() / 1048576
+            JgDownloadState.state.value = JgDlState(
+                active = true, title = subject.title,
+                doneMb = progress, totalMb = if (max > 0) total else 0f
+            )
             notifyUpdate(id) { notification ->
                 if (max > 0) {
                     broadcast(progress / total, subject)

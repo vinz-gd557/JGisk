@@ -13,7 +13,7 @@ class ProgressInputStream(
 
     private fun emitProgress() {
         val cur = System.currentTimeMillis()
-        if (cur - lastUpdate > 1000) {
+        if (cur - lastUpdate > 300) {
             lastUpdate = cur
             progressEmitter(bytesRead)
         }

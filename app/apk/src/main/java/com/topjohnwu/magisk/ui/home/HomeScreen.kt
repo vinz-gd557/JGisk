@@ -266,6 +266,8 @@ fun HomeScreen(
     ) {
         JgHeader(onDelete = viewModel::onDeletePressed)
 
+        JgDownloadBar()
+
         JgCore(
             state = uiState.magiskState,
             version = uiState.magiskInstalledVersion,
