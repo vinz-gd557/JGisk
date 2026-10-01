@@ -337,7 +337,7 @@ fun JgModuleRepoDialog(onDismiss: () -> Unit) {
                 }
                 when {
                     loading -> Text("Memuat...", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    error != null -> Text(errormkdir -p app/apk/src/main/java/com/topjohnwu/magisk/ui/home, color = MaterialTheme.colorScheme.error)
+                    error != null -> Text(error.orEmpty(), color = MaterialTheme.colorScheme.error)
                     items.isEmpty() -> Text("Belum ada module di repo.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     else -> items.forEach { m ->
                         JgPanel {
