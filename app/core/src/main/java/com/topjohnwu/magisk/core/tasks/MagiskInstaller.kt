@@ -482,7 +482,7 @@ abstract class MagiskInstallImpl protected constructor(
             val stamp = java.text.SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(java.util.Date())
             val out = MediaStoreUtils.getFile("JGisk-stock-boot-$stamp.img")
             srcBoot.newInputStream().use { input ->
-                out.uri.outputStream().use { os -> input.copyAll(os, 1024 * 1024) }
+                out.uri.outputStream().use { os -> input.copyTo(os, 1024 * 1024) }
             }
             console.add("- Backup boot stok disimpan: $out")
         } catch (e: Exception) {
