@@ -65,6 +65,7 @@ fun InstallDialog(
 ) {
     val installUiState by installVm.uiState.collectAsStateWithLifecycle()
     var showDownloadDialog by rememberSaveable { mutableStateOf(false) }
+    var showFinder by rememberSaveable { mutableStateOf(false) }
     val filePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let { installVm.onPatchFileSelected(it) }
     }
@@ -95,6 +96,17 @@ fun InstallDialog(
             showDownloadDialog = true
             installVm.onDownloadDialogConsumed()
         }
+    }
+
+    if (showFinder) {
+        JgBootFinderDialog(
+            onDismiss = { showFinder = false },
+            onDownload = { uri ->
+                showFinder = false
+                onDismiss()
+                installVm.downloadFromUrl(uri)
+            }
+        )
     }
 
     if (showDownloadDialog) {
@@ -159,6 +171,11 @@ fun InstallDialog(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
                         ),
                     ) {
+                        SettingsArrow(
+                            title = "Cari boot.img sesuai build number",
+                            onClick = { showFinder = true },
+                        )
+
                         SettingsArrow(
                             title = stringResource(CoreR.string.select_patch_file),
                             onClick = {

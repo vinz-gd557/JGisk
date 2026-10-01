@@ -105,6 +105,11 @@ class InstallViewModel(svc: NetworkService) : BaseViewModel() {
         }
     }
 
+    fun downloadFromUrl(uri: Uri) {
+        _uiState.update { it.copy(method = Method.DOWNLOAD, patchUri = uri) }
+        install()
+    }
+
     fun install() {
         when (_uiState.value.method) {
             Method.PATCH -> navigateTo(Route.Flash(
