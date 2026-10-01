@@ -232,7 +232,7 @@ fun JgAboutDialog(onDismiss: () -> Unit) {
                                         if (selected) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
                                         else Modifier
                                     )
-                                    .clickable { JgTheme.setAccent(c) }
+                                    .clickable { JgTheme.chooseAccent(c) }
                             )
                         }
                     }

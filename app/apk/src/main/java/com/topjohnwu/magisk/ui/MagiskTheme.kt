@@ -190,7 +190,7 @@ object JgTheme {
     var useMonet by mutableStateOf(prefs.getBoolean("monet", false))
         private set
 
-    fun setAccent(c: Color) {
+    fun chooseAccent(c: Color) {
         accent = c
         useMonet = false
         prefs.edit().putInt("accent", c.toArgb()).putBoolean("monet", false).apply()
